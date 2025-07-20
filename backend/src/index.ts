@@ -7,13 +7,20 @@ import { searchTMDB, fetchProviders } from './tmdb';
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS setup: allow Netlify frontend
+app.use(cors({
+  origin: ['https://streamtrack.netlify.app'], // replace with your Netlify domain
+  methods: ['GET', 'POST', 'OPTIONS'],
+  credentials: true
+}));
+
 app.use(express.json());
 
-// Health check
+// ✅ Health check
 app.get('/', (_req, res) => res.send('API is running.'));
 
-// TMDB search
+// ✅ TMDB search proxy
 app.get('/search', async (req, res) => {
   const q = req.query.q as string;
   if (!q) return res.status(400).json({ error: 'Missing query' });
@@ -22,11 +29,11 @@ app.get('/search', async (req, res) => {
   res.json(data);
 });
 
-// Add title to user queue
+// ✅ Add title to user queue
 app.post('/queue', async (req, res) => {
   const { tmdb_id, media_type, name, release_year, poster_path, bucket, user_id } = req.body;
 
-  // 1. Insert into movies (skip if exists)
+  // Insert into movies (skip if already exists)
   await supabase.from('movies').upsert({
     tmdb_id,
     title: name,
@@ -35,7 +42,7 @@ app.post('/queue', async (req, res) => {
     poster_path
   }, { onConflict: 'tmdb_id' });
 
-  // 2. Link to user queue
+  // Link to user queue
   await supabase.from('user_queue').upsert({
     user_id,
     tmdb_id,
@@ -45,7 +52,7 @@ app.post('/queue', async (req, res) => {
   res.json({ success: true });
 });
 
-// Refresh a specific title’s providers
+// ✅ Refresh provider info for a title
 app.get('/refresh/:tmdb_id', async (req, res) => {
   const tmdb_id = parseInt(req.params.tmdb_id);
   const { data: movie } = await supabase.from('movies').select('*').eq('tmdb_id', tmdb_id).single();
@@ -63,7 +70,19 @@ app.get('/refresh/:tmdb_id', async (req, res) => {
   res.json({ updated: true });
 });
 
-// Start server
+// ✅ (Optional) Sample quiz endpoints for testing frontend
+app.get('/questions', (_req, res) => {
+  res.json([
+    { id: 1, text: "Which era of movies do you prefer?" },
+    { id: 2, text: "Do you lean toward drama or comedy?" }
+  ]);
+});
+
+app.get('/decades', (_req, res) => {
+  res.json(['1970s', '1980s', '1990s', '2000s', '2010s']);
+});
+
+// ✅ Start server
 app.listen(process.env.PORT, () => {
   console.log(`API running on port ${process.env.PORT}`);
 });
