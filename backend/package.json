@@ -10,16 +10,17 @@
     "cron": "ts-node src/jobs/refreshAll.ts"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.39.5",
+    "@supabase/supabase-js": "^2.52.0",
     "cors": "^2.8.5",
-    "dotenv": "^16.3.1",
+    "dotenv": "^16.6.1",
     "express": "^4.18.2",
-    "node-fetch": "^2.6.7"
+    "node-fetch": "^2.7.0"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^4.17.21",
-    "@types/node": "^20.4.2",
+    "@types/node": "^20.19.9",
+    "@types/node-fetch": "^2.6.12",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.4.2"
   }
