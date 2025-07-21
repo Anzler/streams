@@ -1,69 +1,93 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { supabase } from './supabase';
-import { searchTMDB, fetchProviders } from './tmdb';
+import { supabase } from './supabase.js';
+import { searchTMDB, fetchProviders } from './tmdb.js';
 
 dotenv.config();
 
 const app = express();
-app.use(cors());
+
+// ✅ CORS setup: allow frontend requests
+app.use(cors({
+  origin: '*', // or use your exact domain: 'https://movfoo.com'
+  methods: ['GET', 'POST', 'OPTIONS']
+}));
+
 app.use(express.json());
 
-// Health check
+// ✅ Health check
 app.get('/', (req, res) => res.send('API is running.'));
 
-// TMDB search
+// ✅ TMDB search
 app.get('/search', async (req, res) => {
-  const q = req.query.q as string;
+  const q = req.query.q;
   if (!q) return res.status(400).json({ error: 'Missing query' });
 
-  const data = await searchTMDB(q);
-  res.json(data);
+  try {
+    const data = await searchTMDB(q);
+    res.json(data);
+  } catch (error) {
+    console.error('[TMDB SEARCH ERROR]', error);
+    res.status(500).json({ error: 'Failed to search TMDB' });
+  }
 });
 
-// Add title to user queue (watching, wishlist, watched)
+// ✅ Add title to user queue
 app.post('/queue', async (req, res) => {
   const { tmdb_id, media_type, name, release_year, poster_path, bucket, user_id } = req.body;
 
-  // 1. Add title to movies (or ignore if already exists)
-  await supabase.from('movies').upsert({
-    tmdb_id,
-    title: name,
-    media_type,
-    release_date: `${release_year}-01-01`,
-    poster_path
-  }, { onConflict: 'tmdb_id' });
+  try {
+    await supabase.from('movies').upsert({
+      tmdb_id,
+      title: name,
+      media_type,
+      release_date: `${release_year}-01-01`,
+      poster_path
+    }, { onConflict: 'tmdb_id' });
 
-  // 2. Add to user_queue
-  await supabase.from('user_queue').upsert({
-    user_id,
-    tmdb_id,
-    bucket
-  });
+    await supabase.from('user_queue').upsert({
+      user_id,
+      tmdb_id,
+      bucket
+    });
 
-  res.json({ success: true });
+    res.json({ success: true });
+  } catch (error) {
+    console.error('[QUEUE ERROR]', error);
+    res.status(500).json({ error: 'Failed to queue item' });
+  }
 });
 
-// Refresh providers for a single movie
+// ✅ Refresh streaming provider info
 app.get('/refresh/:tmdb_id', async (req, res) => {
   const tmdb_id = parseInt(req.params.tmdb_id);
-  const { data: movie } = await supabase.from('movies').select('*').eq('tmdb_id', tmdb_id).single();
 
-  if (!movie) return res.status(404).json({ error: 'Movie not found' });
+  try {
+    const { data: movie } = await supabase
+      .from('movies')
+      .select('*')
+      .eq('tmdb_id', tmdb_id)
+      .single();
 
-  const providerData = await fetchProviders(tmdb_id, movie.media_type);
-  const usProviders = providerData?.results?.US ?? {};
+    if (!movie) return res.status(404).json({ error: 'Movie not found' });
 
-  await supabase.from('movies').update({
-    watch_providers: usProviders,
-    updated_at: new Date().toISOString()
-  }).eq('tmdb_id', tmdb_id);
+    const providerData = await fetchProviders(tmdb_id, movie.media_type);
+    const usProviders = providerData?.results?.US ?? {};
 
-  res.json({ updated: true });
+    await supabase.from('movies').update({
+      watch_providers: usProviders,
+      updated_at: new Date().toISOString()
+    }).eq('tmdb_id', tmdb_id);
+
+    res.json({ updated: true });
+  } catch (error) {
+    console.error('[REFRESH ERROR]', error);
+    res.status(500).json({ error: 'Failed to refresh provider info' });
+  }
 });
 
-// Start the server
+// ✅ Start server
 app.listen(process.env.PORT, () => {
   console.log(`API running on port ${process.env.PORT}`);
 });
