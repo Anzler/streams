@@ -1,8 +1,8 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import { supabase } from './supabase.js';
-import { searchTMDB, fetchProviders } from './tmdb.js';
+const express = require('express');
+const dotenv = require('dotenv');
+const cors = require('cors');
+const { supabase } = require('./supabase');
+const { tmdbSearch, tmdbProviders } = require('./tmdb');
 
 dotenv.config();
 
@@ -10,7 +10,7 @@ const app = express();
 
 // ✅ CORS setup: allow frontend requests
 app.use(cors({
-  origin: '*', // or use your exact domain: 'https://movfoo.com'
+  origin: '*', // Use your frontend domain instead of '*' in production
   methods: ['GET', 'POST', 'OPTIONS']
 }));
 
@@ -19,13 +19,13 @@ app.use(express.json());
 // ✅ Health check
 app.get('/', (req, res) => res.send('API is running.'));
 
-// ✅ TMDB search
+// ✅ TMDB search endpoint
 app.get('/search', async (req, res) => {
   const q = req.query.q;
   if (!q) return res.status(400).json({ error: 'Missing query' });
 
   try {
-    const data = await searchTMDB(q);
+    const data = await tmdbSearch(q);
     res.json(data);
   } catch (error) {
     console.error('[TMDB SEARCH ERROR]', error);
@@ -72,8 +72,7 @@ app.get('/refresh/:tmdb_id', async (req, res) => {
 
     if (!movie) return res.status(404).json({ error: 'Movie not found' });
 
-    const providerData = await fetchProviders(tmdb_id, movie.media_type);
-    const usProviders = providerData?.results?.US ?? {};
+    const usProviders = await tmdbProviders(tmdb_id, movie.media_type);
 
     await supabase.from('movies').update({
       watch_providers: usProviders,
@@ -88,7 +87,8 @@ app.get('/refresh/:tmdb_id', async (req, res) => {
 });
 
 // ✅ Start server
-app.listen(process.env.PORT, () => {
-  console.log(`API running on port ${process.env.PORT}`);
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`API running on port ${PORT}`);
 });
 
