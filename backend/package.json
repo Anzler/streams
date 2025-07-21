@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "build": "echo \"No build step required\""
+    "build": "echo \"No build step required\"",
+    "cron:populate": "node jobs/populateMovies.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.52.0",
