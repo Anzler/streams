@@ -4,52 +4,69 @@ import { supabase } from '../lib/supabase';
 import { Tabs } from './Tabs';
 
 export function Watchlist() {
-  const [bucket, setBucket] = useState('watching');
+  const [status, setStatus] = useState<'watching' | 'want_to_watch' | 'watched'>('watching');
   const [movies, setMovies] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const fetchMovies = async () => {
+    setLoading(true);
+
+    const { data, error } = await supabase
+      .from('user_queue')
+      .select('tmdb_id, bucket, movies ( title, poster_path, tagline, runtime, watch_providers )')
+      .eq('bucket', status)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching movies:', error.message);
+      setMovies([]);
+    } else {
+      setMovies(data);
+    }
+
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const fetchMovies = async () => {
-      const { data: queue } = await supabase
-        .from('user_queue')
-        .select('tmdb_id')
-        .eq('bucket', bucket);
-
-      const ids = queue?.map((q) => q.tmdb_id) || [];
-
-      if (ids.length > 0) {
-        const { data } = await supabase
-          .from('movies')
-          .select('*')
-          .in('tmdb_id', ids);
-
-        setMovies(data || []);
-      } else {
-        setMovies([]);
-      }
-    };
-
     fetchMovies();
-  }, [bucket]);
+  }, [status]);
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl font-bold mb-4">Your Watchlist</h2>
-      <Tabs value={bucket} onChange={setBucket} />
+      <Tabs value={status} onChange={setStatus} />
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {movies.map((movie) => (
-          <div key={movie.tmdb_id} className="border p-2 rounded">
-            <img
-              src={`https://image.tmdb.org/t/p/w185${movie.poster_path}`}
-              alt={movie.title}
-              className="w-full rounded"
-            />
-            <div className="font-bold mt-2 text-sm">{movie.title}</div>
-            <div className="text-xs text-gray-500">{movie.release_date}</div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+      {loading ? (
+        <p className="mt-4 text-gray-500">Loading...</p>
+      ) : (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+          {movies.map((item) => (
+            <div key={item.tmdb_id} className="border rounded p-2 bg-white shadow">
+              <img
+                src={`https://image.tmdb.org/t/p/w185${item.movies?.poster_path}`}
+                alt={item.movies?.title}
+                className="rounded mb-2"
+              />
+              <div className="font-semibold text-sm">{item.movies?.title}</div>
+              <div className="text-xs text-gray-600 italic">{item.movies?.tagline}</div>
+              <div className="text-xs mt-1 text-gray-700">
+                {item.movies?.runtime} min
+              </div>
+              {item.movies?.watch_providers?.flatrate && (
+                <div className="flex flex-wrap gap-1 mt-2">
+                  {item.movies.watch_providers.flatrate.map((provider: any) => (
+                    <img
+                      key={provider.provider_id}
+                      src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                      alt={provider.provider_name}
+                      title={provider.provider_name}
+                      className="h-6 rounded"
+                    />
+                  ))}
+                </div>
+              )}
+              {item.movies?.watch_providers?.ads && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {item.movies.watch_providers.ads.map((provider: any) => (
+                    <img
+                      key={provider.provider_id}
 
