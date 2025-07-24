@@ -16,8 +16,8 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const CHECKPOINT_FILE = path.join(__dirname, 'checkpoint.json');
 
 const DELAY_MS = 300;
-const START_YEAR = 1975;
-const END_YEAR = 1979;
+const START_YEAR = 1980;
+const END_YEAR = 2025;
 const MAX_PAGES_PER_YEAR = 500;
 
 // Load or initialize checkpoint
