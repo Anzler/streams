@@ -1,4 +1,3 @@
-// frontend/src/components/Watchlist.tsx
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tabs } from './Tabs';
@@ -51,22 +50,45 @@ export function Watchlist() {
               <div className="text-xs mt-1 text-gray-700">
                 {item.movies?.runtime} min
               </div>
-              {item.movies?.watch_providers?.flatrate && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {item.movies.watch_providers.flatrate.map((provider: any) => (
-                    <img
-                      key={provider.provider_id}
-                      src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
-                      alt={provider.provider_name}
-                      title={provider.provider_name}
-                      className="h-6 rounded"
-                    />
-                  ))}
+
+              {item.movies?.watch_providers?.flatrate?.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs text-gray-500 font-semibold">Subscription</div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.movies.watch_providers.flatrate.map((provider: any) => (
+                      <img
+                        key={provider.provider_id}
+                        src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                        alt={provider.provider_name}
+                        title={provider.provider_name}
+                        className="h-6 rounded"
+                      />
+                    ))}
+                  </div>
                 </div>
               )}
-              {item.movies?.watch_providers?.ads && (
-                <div className="flex flex-wrap gap-1 mt-1">
-                  {item.movies.watch_providers.ads.map((provider: any) => (
-                    <img
-                      key={provider.provider_id}
+
+              {item.movies?.watch_providers?.ads?.length > 0 && (
+                <div className="mt-2">
+                  <div className="text-xs text-green-700 font-semibold">Ad‑Supported</div>
+                  <div className="flex flex-wrap gap-2">
+                    {item.movies.watch_providers.ads.map((provider: any) => (
+                      <img
+                        key={provider.provider_id}
+                        src={`https://image.tmdb.org/t/p/w45${provider.logo_path}`}
+                        alt={provider.provider_name}
+                        title={`${provider.provider_name} (ads)`}
+                        className="h-6 rounded border border-yellow-500"
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
