@@ -1,29 +1,29 @@
 // frontend/src/components/Tabs.tsx
 type Props = {
   value: 'watching' | 'want_to_watch' | 'watched';
-  onChange: (v: 'watching' | 'want_to_watch' | 'watched') => void;
+  onChange: (val: 'watching' | 'want_to_watch' | 'watched') => void;
 };
 
-export function Tabs({ value, onChange }: Props) {
-  const options = [
-    { label: 'Watching', key: 'watching' },
-    { label: 'Want to Watch', key: 'want_to_watch' },
-    { label: 'Watched', key: 'watched' },
-  ];
+const OPTIONS = [
+  { key: 'watching', label: 'Watching' },
+  { key: 'want_to_watch', label: 'Want to Watch' },
+  { key: 'watched', label: 'Watched' },
+];
 
+export function Tabs({ value, onChange }: Props) {
   return (
-    <div className="flex space-x-2">
-      {options.map((tab) => (
+    <div className="flex gap-2 mb-4">
+      {OPTIONS.map(({ key, label }) => (
         <button
-          key={tab.key}
-          onClick={() => onChange(tab.key as any)}
-          className={`px-4 py-2 rounded border ${
-            value === tab.key
-              ? 'bg-blue-600 text-white'
-              : 'bg-white text-gray-700 border-gray-300'
+          key={key}
+          onClick={() => onChange(key)}
+          className={`px-4 py-2 rounded ${
+            value === key
+              ? 'bg-blue-600 text-white font-semibold'
+              : 'bg-gray-100 text-gray-700'
           }`}
         >
-          {tab.label}
+          {label}
         </button>
       ))}
     </div>
