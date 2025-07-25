@@ -1,4 +1,5 @@
 // frontend/src/components/Tabs.tsx
+
 type Props = {
   value: 'watching' | 'want_to_watch' | 'watched';
   onChange: (val: 'watching' | 'want_to_watch' | 'watched') => void;
@@ -16,7 +17,7 @@ export function Tabs({ value, onChange }: Props) {
       {OPTIONS.map(({ key, label }) => (
         <button
           key={key}
-          onClick={() => onChange(key)}
+          onClick={() => onChange(key as 'watching' | 'want_to_watch' | 'watched')}
           className={`px-4 py-2 rounded ${
             value === key
               ? 'bg-blue-600 text-white font-semibold'
