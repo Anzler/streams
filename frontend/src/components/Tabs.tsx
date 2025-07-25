@@ -1,13 +1,14 @@
 // frontend/src/components/Tabs.tsx
+type Bucket = 'watching' | 'want_to_watch' | 'watched';
 
 type Props = {
-  value: 'watching' | 'want_to_watch' | 'watched';
-  onChange: (val: 'watching' | 'want_to_watch' | 'watched') => void;
+  value: Bucket;
+  onChange: (val: Bucket) => void;
 };
 
-const OPTIONS = [
+const OPTIONS: { key: Bucket; label: string }[] = [
   { key: 'watching', label: 'Watching' },
-  { key: 'want_to_watch', label: 'Want to Watch' },
+  { key: 'want_to_watch', label: 'Want to Watch' }, // ✅ FIXED
   { key: 'watched', label: 'Watched' },
 ];
 
@@ -17,7 +18,7 @@ export function Tabs({ value, onChange }: Props) {
       {OPTIONS.map(({ key, label }) => (
         <button
           key={key}
-          onClick={() => onChange(key as 'watching' | 'want_to_watch' | 'watched')}
+          onClick={() => onChange(key)}
           className={`px-4 py-2 rounded ${
             value === key
               ? 'bg-blue-600 text-white font-semibold'
