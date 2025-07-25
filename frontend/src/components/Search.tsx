@@ -10,12 +10,18 @@ export function Search() {
 
   const onSearch = async () => {
     setLoading(true);
-    const res = await fetch(
-      `https://streamstrack-api.onrender.com/search?q=${encodeURIComponent(q)}`
-    );
-    const json = await res.json();
-    setResults(json.results || []);
-    setLoading(false);
+    try {
+      const res = await fetch(
+        `https://streamstrack-api.onrender.com/search?q=${encodeURIComponent(q)}`
+      );
+      const json = await res.json();
+      setResults(json.results || []);
+    } catch (err) {
+      console.error('Search error:', err);
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const saveToQueue = async (tmdb_id: number) => {
@@ -34,7 +40,7 @@ export function Search() {
       console.error('Failed to save:', error.message);
       alert('Could not save title.');
     } else {
-      alert('Added to your watchlist!');
+      alert('✅ Added to your watchlist!');
     }
   };
 
@@ -78,16 +84,21 @@ export function Search() {
 
           return (
             <div
-              key={item.id}
+              key={item.tmdb_id || item.id}
               className="bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition"
             >
-              {item.poster_path && (
+              {item.poster_path ? (
                 <img
                   src={`https://image.tmdb.org/t/p/w185${item.poster_path}`}
                   alt={item.title}
                   className="rounded mb-3 w-full"
                 />
+              ) : (
+                <div className="h-48 bg-gray-100 mb-3 rounded flex items-center justify-center text-xs text-gray-400">
+                  No poster available
+                </div>
               )}
+
               <div className="font-semibold text-sm">{item.title}</div>
               {item.tagline && (
                 <div className="text-xs italic text-gray-500">
@@ -99,7 +110,7 @@ export function Search() {
                 {item.runtime ? `${item.runtime} min` : '—'}
               </div>
 
-              {/* Streaming Options */}
+              {/* Streaming Providers */}
               {flatrate.length > 0 && (
                 <div className="mt-3">
                   <div className="text-xs font-semibold text-gray-700 mb-1">
@@ -138,9 +149,8 @@ export function Search() {
                 </div>
               )}
 
-              {/* Save Button */}
               <button
-                onClick={() => saveToQueue(item.id)}
+                onClick={() => saveToQueue(item.tmdb_id || item.id)}
                 className="mt-4 text-xs text-blue-600 hover:underline"
               >
                 ➕ Add to Watchlist
