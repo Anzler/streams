@@ -1,4 +1,4 @@
-v// frontend/src/components/Watchlist.tsx
+// frontend/src/components/Watchlist.tsx
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { Tabs } from './Tabs';
@@ -104,3 +104,4 @@ export function Watchlist() {
     </div>
   );
 }
+
